@@ -24,7 +24,7 @@ module.exports = {
   },
   output: {
     filename: 'renderer.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'build', 'renderer'),
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -32,7 +32,7 @@ module.exports = {
     }),
   ],
   devServer: {
-    static: path.join(__dirname, 'dist'),
+    static: path.join(__dirname, 'build', 'renderer'),
     port: 3000,
   },
 };

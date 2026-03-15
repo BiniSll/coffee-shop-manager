@@ -16,9 +16,7 @@ function createWindow() {
 
   mainWindow.maximize();
 
-  // Always load the pre-built file from dist/
-  // For dev with hot-reload, run `npm run dev:renderer` separately and uncomment the loadURL line
-  const distPath = path.join(__dirname, '..', '..', 'dist', 'index.html');
+  const distPath = path.join(__dirname, '..', 'renderer', 'index.html');
   mainWindow.loadFile(distPath);
 
   mainWindow.on('closed', () => {

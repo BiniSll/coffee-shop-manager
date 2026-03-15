@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "outDir": "./dist-main",
+    "outDir": "./build",
     "rootDir": "./src",
     "moduleResolution": "node"
   },
