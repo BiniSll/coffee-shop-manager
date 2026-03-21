@@ -11,10 +11,15 @@ export function getDb(): Database.Database {
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     initSchema();
+    runMigrations();
   }
   return db;
 }
 
+// ── Initial schema ────────────────────────────────────────────────────────────
+// Uses CREATE TABLE IF NOT EXISTS so it is safe to run on both new and existing
+// databases. Do NOT alter these statements in future releases — add a migration
+// entry in the MIGRATIONS array below instead.
 function initSchema() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -104,10 +109,72 @@ function initSchema() {
     );
   `);
 
-  // Seed default admin if no users exist
+  // Seed default users on first run
   const count = db.prepare('SELECT COUNT(*) as cnt FROM users').get() as any;
   if (count.cnt === 0) {
     db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)').run('admin', 'admin', 'admin');
     db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)').run('staff', 'staff', 'staff');
+  }
+}
+
+// ── Migrations ────────────────────────────────────────────────────────────────
+// Each entry runs exactly once on databases that have not yet reached that
+// version. The version is stored in SQLite's built-in PRAGMA user_version so
+// no extra table is needed.
+//
+// Rules:
+//  - Never edit or delete an existing entry — only append new ones.
+//  - Increment version by 1 each time.
+//  - Prefer ALTER TABLE … ADD COLUMN for adding columns (SQLite supports it).
+//  - To rename/drop a column you must recreate the table (see SQLite docs).
+//
+// Example — adding a discount column to orders in a future release:
+//   {
+//     version: 2,
+//     description: 'Add discount column to orders',
+//     up: [
+//       'ALTER TABLE orders ADD COLUMN discount REAL NOT NULL DEFAULT 0',
+//     ],
+//   },
+
+interface Migration {
+  version: number;
+  description: string;
+  up: string[];
+}
+
+const MIGRATIONS: Migration[] = [
+  {
+    version: 1,
+    description: 'Baseline — all tables already created by initSchema',
+    up: [],  // Nothing to run; just marks existing databases as up-to-date.
+  },
+
+  // ── Add new migrations here ───────────────────────────────────────────────
+  // {
+  //   version: 2,
+  //   description: 'Example: add notes column to orders',
+  //   up: [
+  //     'ALTER TABLE orders ADD COLUMN notes TEXT',
+  //   ],
+  // },
+];
+
+function runMigrations() {
+  const currentVersion = db.pragma('user_version', { simple: true }) as number;
+
+  const pending = MIGRATIONS.filter(m => m.version > currentVersion);
+  if (pending.length === 0) return;
+
+  for (const migration of pending) {
+    db.transaction(() => {
+      for (const sql of migration.up) {
+        db.exec(sql);
+      }
+      // user_version must be set via pragma (cannot use bound parameters)
+      db.pragma(`user_version = ${migration.version}`);
+    })();
+
+    console.log(`[DB] Migration v${migration.version} applied: ${migration.description}`);
   }
 }
