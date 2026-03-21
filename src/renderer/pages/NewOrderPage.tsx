@@ -44,6 +44,23 @@ interface CartItem {
   quantity: number;
 }
 
+interface OrderItem {
+  id: number;
+  order_id: number;
+  menu_item_id: number;
+  quantity: number;
+  price: number;
+  item_name: string;
+  category: string;
+}
+
+interface OrderWithItems {
+  id: number;
+  created_by_name: string;
+  created_at: string;
+  items: OrderItem[];
+}
+
 const FIXTURE_ICONS: Record<string, string> = {
   toilet: '🚻', bar: '🍸', kitchen: '🍳', door: '🚪', window: '🪟',
   stairs: '🪜', column: '⬤', plant: '🌿', wall: '▬', sofa: '🛋️',
@@ -77,6 +94,8 @@ export default function NewOrderPage({ user }: { user: User }) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [logo, setLogo] = useState<string | null>(null);
+  const [tableOrdersData, setTableOrdersData] = useState<OrderWithItems[]>([]);
+  const [loadingTableOrders, setLoadingTableOrders] = useState(false);
 
   useEffect(() => {
     ipc.getSetting('logo').then((val: string | null) => setLogo(val));
@@ -101,6 +120,54 @@ export default function NewOrderPage({ user }: { user: User }) {
       ipc.listFixtures(selectedRoom.id).then((data: Fixture[]) => setFixtures(data));
     }
   }, [selectedRoom]);
+
+  const reloadTableOrders = useCallback(async (tableId: number) => {
+    const orders: any[] = await ipc.getTableActiveOrders(tableId);
+    const withItems: OrderWithItems[] = await Promise.all(
+      orders.map(async (order: any) => {
+        const items = await ipc.getOrderItems(order.id);
+        return { ...order, items };
+      })
+    );
+    setTableOrdersData(withItems);
+    setBusyTables(prev => {
+      const next = new Set(prev);
+      if (withItems.length === 0) next.delete(tableId);
+      else next.add(tableId);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!selectedTable) {
+      setTableOrdersData([]);
+      return;
+    }
+    setLoadingTableOrders(true);
+    reloadTableOrders(selectedTable).finally(() => setLoadingTableOrders(false));
+  }, [selectedTable, reloadTableOrders]);
+
+  // Recalculate canvas size when sidebar appears/disappears
+  useEffect(() => {
+    const timer = setTimeout(updateCanvasSize, 10);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTable]);
+
+  const handleCompleteOrder = async (orderId: number) => {
+    await ipc.updateOrderStatus(orderId, 'completed');
+    if (selectedTable) await reloadTableOrders(selectedTable);
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    await ipc.updateOrderStatus(orderId, 'cancelled');
+    if (selectedTable) await reloadTableOrders(selectedTable);
+  };
+
+  const handleCompleteAllOrders = async () => {
+    await Promise.all(tableOrdersData.map(o => ipc.updateOrderStatus(o.id, 'completed')));
+    if (selectedTable) await reloadTableOrders(selectedTable);
+  };
 
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
@@ -170,6 +237,11 @@ export default function NewOrderPage({ user }: { user: User }) {
 
   const categories = [...new Set(menuItems.map(i => i.category))];
 
+  const tableOrdersTotal = tableOrdersData.reduce(
+    (sum, order) => sum + order.items.reduce((s, i) => s + i.price * i.quantity, 0),
+    0
+  );
+
   return (
     <div className="new-order-layout">
       {/* Left column: table selection + menu items (scrollable) */}
@@ -205,63 +277,117 @@ export default function NewOrderPage({ user }: { user: User }) {
                 </button>
               ))}
             </div>
-            {selectedRoom && (
-              <div ref={canvasWrapperRef} style={{ width: '100%' }}>
-                <div className="room-canvas room-canvas-select"
-                  style={{ width: canvasSize.w, height: canvasSize.h, margin: '0 auto' }}>
-                  {/* Fixtures (non-clickable, for context) */}
-                  {fixtures.map(fixture => (
-                    <div
-                      key={'f-' + fixture.id}
-                      className="floor-fixture floor-fixture-readonly"
-                      style={{
-                        left: fixture.x * tableScale,
-                        top: fixture.y * tableScale,
-                        width: fixture.width * tableScale,
-                        height: fixture.height * tableScale,
-                        backgroundColor: FIXTURE_COLORS[fixture.type] || '#616161',
-                        transform: fixture.rotation ? `rotate(${fixture.rotation}deg)` : undefined,
-                        fontSize: Math.max(8, 10 * tableScale),
-                      }}
-                    >
-                      <span className="floor-fixture-icon" style={{ fontSize: Math.max(12, 16 * tableScale) }}>{FIXTURE_ICONS[fixture.type] || '?'}</span>
-                      <span className="floor-fixture-label">{fixture.label}</span>
-                    </div>
-                  ))}
-                  {/* Tables */}
-                  {tables.map(table => {
-                    const nodeSize = Math.max(50, 85 * tableScale);
-                    return (
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              {/* Floor plan canvas */}
+              {selectedRoom && (
+                <div ref={canvasWrapperRef} style={{ flex: '1 1 auto', minWidth: 0 }}>
+                  <div className="room-canvas room-canvas-select"
+                    style={{ width: canvasSize.w, height: canvasSize.h, margin: '0 auto' }}>
+                    {/* Fixtures (non-clickable, for context) */}
+                    {fixtures.map(fixture => (
                       <div
-                        key={table.id}
-                        className={`table-node table-node-select ${selectedTable === table.id ? 'selected' : ''} ${busyTables.has(table.id) ? 'has-order' : ''}`}
+                        key={'f-' + fixture.id}
+                        className="floor-fixture floor-fixture-readonly"
                         style={{
-                          left: table.x * tableScale,
-                          top: table.y * tableScale,
-                          width: nodeSize,
-                          height: nodeSize,
-                          fontSize: Math.max(11, 14 * tableScale),
+                          left: fixture.x * tableScale,
+                          top: fixture.y * tableScale,
+                          width: fixture.width * tableScale,
+                          height: fixture.height * tableScale,
+                          backgroundColor: FIXTURE_COLORS[fixture.type] || '#616161',
+                          transform: fixture.rotation ? `rotate(${fixture.rotation}deg)` : undefined,
+                          fontSize: Math.max(8, 10 * tableScale),
                         }}
-                        onClick={() => setSelectedTable(table.id)}
                       >
-                        {table.label}
-                        <span className="seats">{table.seats} ulse</span>
+                        <span className="floor-fixture-icon" style={{ fontSize: Math.max(12, 16 * tableScale) }}>{FIXTURE_ICONS[fixture.type] || '?'}</span>
+                        <span className="floor-fixture-label">{fixture.label}</span>
                       </div>
-                    );
-                  })}
-                  {tables.length === 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#8d6e63' }}>
-                      Nuk ka tavolina ne kete salle
-                    </div>
+                    ))}
+                    {/* Tables */}
+                    {tables.map(table => {
+                      const nodeSize = Math.max(50, 85 * tableScale);
+                      return (
+                        <div
+                          key={table.id}
+                          className={`table-node table-node-select ${selectedTable === table.id ? 'selected' : ''} ${busyTables.has(table.id) ? 'has-order' : ''}`}
+                          style={{
+                            left: table.x * tableScale,
+                            top: table.y * tableScale,
+                            width: nodeSize,
+                            height: nodeSize,
+                            fontSize: Math.max(11, 14 * tableScale),
+                          }}
+                          onClick={() => setSelectedTable(table.id)}
+                        >
+                          {table.label}
+                          <span className="seats">{table.seats} ulse</span>
+                        </div>
+                      );
+                    })}
+                    {tables.length === 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#8d6e63' }}>
+                        Nuk ka tavolina ne kete salle
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Table orders sidebar */}
+              {selectedTable && (
+                <div className="table-orders-sidebar">
+                  <div className="table-orders-sidebar-header">
+                    <span>Tavolina {tables.find(t => t.id === selectedTable)?.label}</span>
+                    <button className="table-orders-close-btn" onClick={() => setSelectedTable(null)}>✕</button>
+                  </div>
+
+                  {loadingTableOrders ? (
+                    <p className="table-orders-empty">Duke ngarkuar...</p>
+                  ) : tableOrdersData.length === 0 ? (
+                    <p className="table-orders-empty">Nuk ka porosi te hapura.</p>
+                  ) : (
+                    <>
+                      <div className="table-orders-list">
+                        {tableOrdersData.map(order => {
+                          const orderTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+                          return (
+                            <div key={order.id} className="table-order-entry">
+                              <div className="table-order-entry-header">
+                                <span className="table-order-id">#{order.id}</span>
+                                <span className="table-order-staff">{order.created_by_name}</span>
+                              </div>
+                              <div className="table-order-items">
+                                {order.items.map(item => (
+                                  <div key={item.id} className="table-order-item-row">
+                                    <span className="table-order-item-name">{item.item_name}</span>
+                                    <span className="table-order-item-qty">x{item.quantity}</span>
+                                    <span className="table-order-item-price">{(item.price * item.quantity).toFixed(2)}€</span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="table-order-subtotal">
+                                {orderTotal.toFixed(2)} €
+                                <div className="table-order-actions">
+                                  <button className="btn btn-success btn-sm" onClick={() => handleCompleteOrder(order.id)}>✓</button>
+                                  <button className="btn btn-danger btn-sm" onClick={() => handleCancelOrder(order.id)}>✕</button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="table-orders-total">
+                        <span>TOTAL</span>
+                        <span>{tableOrdersTotal.toFixed(2)} €</span>
+                      </div>
+                      <button className="btn btn-success btn-block" style={{ marginTop: 10 }} onClick={handleCompleteAllOrders}>
+                        Paguaj ({tableOrdersTotal.toFixed(2)} €)
+                      </button>
+                    </>
                   )}
                 </div>
-              </div>
-            )}
-            {selectedTable && (
-              <div className="selected-table-info">
-                Tavolina: <strong>{tables.find(t => t.id === selectedTable)?.label}</strong>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
