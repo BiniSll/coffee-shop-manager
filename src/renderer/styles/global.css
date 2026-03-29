@@ -18,19 +18,19 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 230px;
+  width: 200px;
   background: #3e2723;
   color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
+  padding: 10px 0;
 }
 
 .sidebar-header {
   text-align: center;
-  padding: 0 15px 20px;
+  padding: 0 10px 10px;
   border-bottom: 1px solid #5d4037;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
 }
 
@@ -59,8 +59,8 @@ body {
   display: block;
   color: #d7ccc8;
   text-decoration: none;
-  padding: 14px 20px;
-  font-size: 15px;
+  padding: 8px 14px;
+  font-size: 14px;
   transition: background 0.2s;
 }
 
@@ -71,19 +71,19 @@ body {
 }
 
 .sidebar-footer {
-  padding: 15px 20px;
+  padding: 8px 14px;
   border-top: 1px solid #5d4037;
 }
 
 .sidebar-footer button {
   width: 100%;
-  padding: 12px;
+  padding: 8px;
   background: #795548;
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .sidebar-footer button:hover {
@@ -93,7 +93,7 @@ body {
 /* Main content */
 .main-content {
   flex: 1;
-  padding: 24px;
+  padding: 12px 16px;
   overflow-y: auto;
 }
 
@@ -108,10 +108,10 @@ body {
 
 .login-card {
   background: #fff;
-  padding: 40px;
+  padding: 28px;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  width: 380px;
+  width: 360px;
 }
 
 .login-card h1 {
@@ -136,7 +136,7 @@ body {
 
 /* Forms */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .form-group label {
@@ -150,10 +150,10 @@ body {
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 12px 14px;
+  padding: 8px 10px;
   border: 1px solid #d7ccc8;
   border-radius: 6px;
-  font-size: 15px;
+  font-size: 14px;
   background: #fafafa;
 }
 
@@ -174,11 +174,11 @@ body {
 
 /* Buttons */
 .btn {
-  padding: 12px 24px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   transition: background 0.2s, transform 0.1s;
 }
@@ -224,20 +224,20 @@ body {
 }
 
 .btn-sm {
-  padding: 8px 14px;
-  font-size: 13px;
+  padding: 5px 10px;
+  font-size: 12px;
 }
 
 .btn-lg {
-  padding: 14px 28px;
-  font-size: 16px;
+  padding: 10px 20px;
+  font-size: 15px;
 }
 
 .btn-xl {
-  padding: 18px 48px;
-  font-size: 20px;
+  padding: 12px 32px;
+  font-size: 18px;
   font-weight: bold;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .btn-block {
@@ -250,19 +250,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .page-header h2 {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .card {
   background: #fff;
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 12px;
+  margin-bottom: 10px;
 }
 
 /* Tables (HTML) */
@@ -274,9 +274,9 @@ table.data-table {
 table.data-table th,
 table.data-table td {
   text-align: left;
-  padding: 12px 14px;
+  padding: 6px 10px;
   border-bottom: 1px solid #efebe9;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 table.data-table th {
@@ -368,17 +368,17 @@ table.data-table tr:hover {
 /* Order type bar */
 .order-type-bar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .order-type-btn {
   flex: 1;
-  padding: 20px;
-  border: 3px solid #d7ccc8;
-  border-radius: 12px;
+  padding: 12px;
+  border: 2px solid #d7ccc8;
+  border-radius: 8px;
   background: #fff;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: bold;
   color: #5d4037;
   cursor: pointer;
@@ -399,21 +399,21 @@ table.data-table tr:hover {
 .new-order-layout {
   display: flex;
   gap: 0;
-  height: calc(100vh - 48px);
-  margin: -24px;
+  height: calc(100vh - 24px);
+  margin: -12px -16px;
 }
 
 .new-order-left {
   flex: 1;
-  padding: 24px;
+  padding: 12px 16px;
   overflow-y: auto;
 }
 
 .new-order-right {
-  width: 350px;
+  width: 320px;
   background: #fff;
   border-left: 1px solid #efebe9;
-  padding: 20px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -451,12 +451,12 @@ table.data-table tr:hover {
 .menu-card-touch {
   background: #fff;
   border: 2px solid #efebe9;
-  border-radius: 10px;
-  padding: 16px 12px;
+  border-radius: 8px;
+  padding: 10px 8px;
   cursor: pointer;
   transition: all 0.15s;
   text-align: center;
-  min-height: 80px;
+  min-height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -495,8 +495,8 @@ table.data-table tr:hover {
 .cart-item-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 0;
+  gap: 8px;
+  padding: 6px 0;
   border-bottom: 1px solid #efebe9;
 }
 
@@ -548,12 +548,12 @@ table.data-table tr:hover {
 
 .cart-total {
   border-top: 3px solid #3e2723;
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
   display: flex;
   justify-content: space-between;
   font-weight: bold;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 /* Modal */
@@ -572,25 +572,25 @@ table.data-table tr:hover {
 
 .modal {
   background: #fff;
-  border-radius: 12px;
-  padding: 28px;
-  width: 500px;
-  max-height: 80vh;
+  border-radius: 10px;
+  padding: 20px;
+  width: 480px;
+  max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
 
 .modal h3 {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #3e2723;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .modal-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: 14px;
 }
 
 /* Status badge */
@@ -624,16 +624,16 @@ table.data-table tr:hover {
 .tabs {
   display: flex;
   gap: 0;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   border-bottom: 2px solid #efebe9;
 }
 
 .tab {
-  padding: 12px 22px;
+  padding: 8px 16px;
   cursor: pointer;
   border: none;
   background: none;
-  font-size: 15px;
+  font-size: 14px;
   color: #8d6e63;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
@@ -689,9 +689,9 @@ table.data-table tr:hover {
 }
 
 .order-details {
-  margin-top: 12px;
+  margin-top: 8px;
   border-top: 1px solid #efebe9;
-  padding-top: 12px;
+  padding-top: 8px;
 }
 
 /* Summary cards */
@@ -703,8 +703,8 @@ table.data-table tr:hover {
 
 .summary-card {
   background: #fff;
-  border-radius: 10px;
-  padding: 18px;
+  border-radius: 8px;
+  padding: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   text-align: center;
 }
@@ -727,7 +727,7 @@ table.data-table tr:hover {
 }
 
 .summary-value {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
 }
 
@@ -746,13 +746,13 @@ table.data-table tr:hover {
 .rooms-layout {
   display: flex;
   gap: 0;
-  height: calc(100vh - 48px);
-  margin: -24px;
+  height: calc(100vh - 24px);
+  margin: -12px -16px;
 }
 
 .rooms-main {
   flex: 1;
-  padding: 24px;
+  padding: 12px 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -774,7 +774,7 @@ table.data-table tr:hover {
 }
 
 .room-tab {
-  padding: 10px 22px;
+  padding: 6px 16px;
   border: 2px solid #d7ccc8;
   border-radius: 8px;
   background: #fff;
@@ -1004,14 +1004,14 @@ table.data-table tr:hover {
 
 /* Properties panel */
 .props-panel {
-  padding: 20px;
+  padding: 12px;
 }
 
 .props-panel h3 {
-  font-size: 16px;
+  font-size: 15px;
   color: #3e2723;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #efebe9;
 }
 
