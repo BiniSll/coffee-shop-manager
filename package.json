@@ -1,6 +1,6 @@
 {
   "name": "coffee-shop-manager",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Coffee Shop Manager - manage menu, rooms, tables, and orders",
   "main": "build/main/index.js",
   "scripts": {
@@ -64,7 +64,7 @@
     },
     "win": {
       "target": [
-        "portable"
+        "nsis"
       ]
     },
     "linux": {
@@ -73,8 +73,8 @@
       ]
     },
     "nsis": {
-      "oneClick": true,
-      "allowToChangeInstallationDirectory": false
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "asar": true,
     "asarUnpack": [
