@@ -76,7 +76,6 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "closeApplications": true,
       "deleteAppDataOnUninstall": false,
       "allowElevation": true,
       "installerLanguages": [
