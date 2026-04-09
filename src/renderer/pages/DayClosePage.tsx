@@ -31,16 +31,28 @@ export default function DayClosePage({ user }: { user: User }) {
   const [notes, setNotes] = useState('');
   const [closings, setClosings] = useState<Closing[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [prevUnclosed, setPrevUnclosed] = useState<{ date: string; order_count: number } | null>(null);
+  const [prevSummary, setPrevSummary] = useState<Summary | null>(null);
+  const [showPrevConfirm, setShowPrevConfirm] = useState(false);
+  const [prevNotes, setPrevNotes] = useState('');
 
   const load = async () => {
-    const [s, closed, list] = await Promise.all([
+    const [s, closed, list, prev] = await Promise.all([
       ipc.todaySummary(),
       ipc.isClosedToday(),
       ipc.listClosings(),
+      ipc.unclosedPreviousDay(),
     ]);
     setSummary(s);
     setIsClosed(closed);
     setClosings(list);
+    setPrevUnclosed(prev);
+    if (prev) {
+      const ps = await ipc.daySummary(prev.date);
+      setPrevSummary(ps);
+    } else {
+      setPrevSummary(null);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -55,11 +67,66 @@ export default function DayClosePage({ user }: { user: User }) {
     }
   };
 
+  const handleClosePrevDay = async () => {
+    if (!prevUnclosed) return;
+    const result = await ipc.closeDay(user.id, prevNotes, prevUnclosed.date);
+    if (result.success) {
+      setShowPrevConfirm(false);
+      setPrevNotes('');
+      load();
+    } else {
+      alert(result.error);
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
         <h2>Mbyll Diten</h2>
       </div>
+
+      {/* Unclosed previous day warning */}
+      {prevUnclosed && (
+        <div className="card" style={{ marginBottom: 16, border: '2px solid #e65100', background: '#fff3e0' }}>
+          <div style={{ padding: 16 }}>
+            <h3 style={{ color: '#e65100', marginBottom: 8 }}>Dita e {prevUnclosed.date} nuk eshte mbyllur!</h3>
+            <p style={{ marginBottom: 12, color: '#555' }}>
+              Ka {prevUnclosed.order_count} porosi nga dita {prevUnclosed.date} qe nuk jane perfshire ne mbyllje.
+              {prevSummary && ` Te ardhurat: ${prevSummary.total_revenue.toFixed(2)} €, Porosi: ${prevSummary.total_orders}.`}
+            </p>
+            <button className="btn btn-primary" onClick={() => setShowPrevConfirm(true)}>
+              Mbyll Diten {prevUnclosed.date}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm modal for previous day */}
+      {showPrevConfirm && prevUnclosed && (
+        <div className="modal-overlay" onClick={() => setShowPrevConfirm(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Mbyll Diten {prevUnclosed.date}</h3>
+            <p style={{ marginBottom: 16 }}>
+              Kjo do te perfundoj te gjitha porosite e hapura dhe do te ruaj permbledhjen per daten {prevUnclosed.date}.
+            </p>
+            {prevSummary && (
+              <div className="close-summary">
+                <div><strong>Te ardhurat:</strong> {prevSummary.total_revenue.toFixed(2)} €</div>
+                <div><strong>Porosi:</strong> {prevSummary.total_orders}</div>
+                <div><strong>Artikuj:</strong> {prevSummary.total_items}</div>
+              </div>
+            )}
+            <div className="form-group" style={{ marginTop: 16 }}>
+              <label>Shenime (opsionale)</label>
+              <input value={prevNotes} onChange={e => setPrevNotes(e.target.value)} placeholder="Shenime per diten..." />
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-secondary btn-lg" onClick={() => setShowPrevConfirm(false)}>Anulo</button>
+              <button className="btn btn-success btn-lg" onClick={handleClosePrevDay}>Konfirmo</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Today summary */}
       {summary && (

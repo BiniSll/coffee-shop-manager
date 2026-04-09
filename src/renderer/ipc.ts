@@ -44,9 +44,11 @@ export const ipc = {
   todaySummary: () => ipcRenderer.invoke('orders:today-summary'),
 
   // Daily closings
-  closeDay: (closedBy: number, notes: string) => ipcRenderer.invoke('daily:close', closedBy, notes),
+  closeDay: (closedBy: number, notes: string, targetDate?: string) => ipcRenderer.invoke('daily:close', closedBy, notes, targetDate),
   listClosings: () => ipcRenderer.invoke('daily:list'),
   isClosedToday: () => ipcRenderer.invoke('daily:is-closed-today'),
+  unclosedPreviousDay: () => ipcRenderer.invoke('daily:unclosed-previous'),
+  daySummary: (date: string) => ipcRenderer.invoke('orders:day-summary', date),
 
   // Settings
   getSetting: (key: string) => ipcRenderer.invoke('settings:get', key),
