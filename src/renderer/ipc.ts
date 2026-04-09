@@ -58,6 +58,19 @@ export const ipc = {
   // Admin
   resetAll: () => ipcRenderer.invoke('admin:reset-all'),
 
+  // App
+  getAppVersion: () => ipcRenderer.invoke('app:version'),
+
+  // Updater
+  checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+  downloadUpdate: () => ipcRenderer.invoke('updater:download'),
+  installUpdate: () => ipcRenderer.invoke('updater:install'),
+  onUpdaterEvent: (channel: string, callback: (data?: any) => void) => {
+    const listener = (_e: any, data?: any) => callback(data);
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
+
   // Reports
   reportsDailyRange: (start: string, end: string) => ipcRenderer.invoke('reports:daily-range', start, end),
   reportsTopItems: (start: string, end: string) => ipcRenderer.invoke('reports:top-items', start, end),

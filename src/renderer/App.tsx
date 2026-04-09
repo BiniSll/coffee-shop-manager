@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import Sidebar from './components/Sidebar';
+import UpdateBar from './components/UpdateBar';
 import MenuPage from './pages/MenuPage';
 import RoomsPage from './pages/RoomsPage';
 import OrdersPage from './pages/OrdersPage';
@@ -28,6 +29,7 @@ export default function App() {
       <div className="app-layout">
         <Sidebar user={user} onLogout={() => setUser(null)} />
         <div className="main-content">
+          <UpdateBar />
           <Routes>
             <Route path="/orders" element={<OrdersPage user={user} />} />
             <Route path="/new-order" element={<NewOrderPage user={user} />} />

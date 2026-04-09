@@ -9,11 +9,30 @@ export default function SettingsPage() {
   const [caffeName, setCaffeName] = useState('');
   const [caffeNameSaved, setCaffeNameSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [appVersion, setAppVersion] = useState('');
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'not-available' | 'error'>('idle');
 
   useEffect(() => {
     ipc.getSetting('logo').then((val: string | null) => setLogo(val));
     ipc.getSetting('caffe_name').then((val: string | null) => setCaffeName(val || ''));
+    ipc.getAppVersion().then((v: string) => setAppVersion(v));
   }, []);
+
+  useEffect(() => {
+    const unsub = [
+      ipc.onUpdaterEvent('updater:checking', () => setUpdateStatus('checking')),
+      ipc.onUpdaterEvent('updater:available', () => setUpdateStatus('available')),
+      ipc.onUpdaterEvent('updater:not-available', () => setUpdateStatus('not-available')),
+      ipc.onUpdaterEvent('updater:downloaded', () => setUpdateStatus('idle')),
+      ipc.onUpdaterEvent('updater:error', () => setUpdateStatus('error')),
+    ];
+    return () => unsub.forEach(fn => fn());
+  }, []);
+
+  const handleCheckUpdates = async () => {
+    setUpdateStatus('checking');
+    await ipc.checkForUpdates();
+  };
 
   const handleSaveName = async () => {
     if (caffeName.trim()) {
@@ -105,6 +124,31 @@ export default function SettingsPage() {
             <button className="btn btn-secondary btn-lg" onClick={handleRemoveLogo}>
               Hiq Logon
             </button>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginBottom: 12, color: '#5d4037' }}>Perditesimet</h3>
+        <p style={{ marginBottom: 16, color: '#8d6e63', fontSize: 14 }}>
+          Versioni aktual: <strong>{appVersion || '...'}</strong>
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            className="btn btn-primary btn-lg"
+            onClick={handleCheckUpdates}
+            disabled={updateStatus === 'checking'}
+          >
+            {updateStatus === 'checking' ? 'Duke kontrolluar...' : 'Kontrollo per Perditesime'}
+          </button>
+          {updateStatus === 'available' && (
+            <span style={{ color: '#1565c0', fontWeight: 600 }}>Versioni i ri eshte i disponueshem! Shiko njoftimin lart.</span>
+          )}
+          {updateStatus === 'not-available' && (
+            <span style={{ color: '#2e7d32', fontWeight: 600 }}>Keni versionin me te ri!</span>
+          )}
+          {updateStatus === 'error' && (
+            <span style={{ color: '#c62828' }}>Gabim gjate kontrollit. Kontrolloni lidhjen me internetin.</span>
           )}
         </div>
       </div>

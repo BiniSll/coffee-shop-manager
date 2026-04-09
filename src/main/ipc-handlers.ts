@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, app } from 'electron';
 import { getDb } from './database';
 
 function getLocalDate(): string {
@@ -11,6 +11,9 @@ function getLocalDate(): string {
 
 export function registerIpcHandlers() {
   const db = getDb();
+
+  // ── App ──
+  ipcMain.handle('app:version', () => app.getVersion());
 
   // ── Auth ──
   ipcMain.handle('auth:login', (_e, username: string, password: string) => {
