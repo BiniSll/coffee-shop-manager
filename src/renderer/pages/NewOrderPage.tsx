@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ipc } from '../ipc';
 import { User } from '../App';
 
@@ -83,7 +82,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function NewOrderPage({ user }: { user: User }) {
-  const navigate = useNavigate();
   const [orderType, setOrderType] = useState<'dine-in' | 'take-away'>('dine-in');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -205,7 +203,11 @@ export default function NewOrderPage({ user }: { user: User }) {
         price: c.menuItem.price,
       })),
     });
-    navigate('/orders');
+
+    setCart([]);
+    if (selectedTable) {
+      await reloadTableOrders(selectedTable);
+    }
   };
 
   // Responsive table canvas
