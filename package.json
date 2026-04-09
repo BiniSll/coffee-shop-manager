@@ -24,6 +24,7 @@
   "dependencies": {
     "better-sqlite3": "^12.8.0",
     "electron-is-dev": "^3.0.1",
+    "electron-updater": "^6.8.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1"
@@ -78,12 +79,19 @@
       "closeApplications": true,
       "deleteAppDataOnUninstall": false,
       "allowElevation": true,
-      "installerLanguages": ["en_US"],
+      "installerLanguages": [
+        "en_US"
+      ],
       "warningsAsErrors": false
     },
     "asar": true,
     "asarUnpack": [
       "node_modules/better-sqlite3/**/*"
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "BiniSll",
+      "repo": "coffee-shop-manager"
+    }
   }
 }

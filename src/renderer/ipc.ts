@@ -44,9 +44,11 @@ export const ipc = {
   todaySummary: () => ipcRenderer.invoke('orders:today-summary'),
 
   // Daily closings
-  closeDay: (closedBy: number, notes: string) => ipcRenderer.invoke('daily:close', closedBy, notes),
+  closeDay: (closedBy: number, notes: string, targetDate?: string) => ipcRenderer.invoke('daily:close', closedBy, notes, targetDate),
   listClosings: () => ipcRenderer.invoke('daily:list'),
   isClosedToday: () => ipcRenderer.invoke('daily:is-closed-today'),
+  unclosedPreviousDay: () => ipcRenderer.invoke('daily:unclosed-previous'),
+  daySummary: (date: string) => ipcRenderer.invoke('orders:day-summary', date),
 
   // Settings
   getSetting: (key: string) => ipcRenderer.invoke('settings:get', key),
@@ -55,6 +57,19 @@ export const ipc = {
 
   // Admin
   resetAll: () => ipcRenderer.invoke('admin:reset-all'),
+
+  // App
+  getAppVersion: () => ipcRenderer.invoke('app:version'),
+
+  // Updater
+  checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+  downloadUpdate: () => ipcRenderer.invoke('updater:download'),
+  installUpdate: () => ipcRenderer.invoke('updater:install'),
+  onUpdaterEvent: (channel: string, callback: (data?: any) => void) => {
+    const listener = (_e: any, data?: any) => callback(data);
+    ipcRenderer.on(channel, listener);
+    return () => ipcRenderer.removeListener(channel, listener);
+  },
 
   // Reports
   reportsDailyRange: (start: string, end: string) => ipcRenderer.invoke('reports:daily-range', start, end),

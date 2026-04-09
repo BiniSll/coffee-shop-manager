@@ -1,8 +1,19 @@
-import { ipcMain } from 'electron';
+import { ipcMain, app } from 'electron';
 import { getDb } from './database';
+
+function getLocalDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export function registerIpcHandlers() {
   const db = getDb();
+
+  // ── App ──
+  ipcMain.handle('app:version', () => app.getVersion());
 
   // ── Auth ──
   ipcMain.handle('auth:login', (_e, username: string, password: string) => {
@@ -205,17 +216,17 @@ export function registerIpcHandlers() {
   });
 
   // ── Daily Closings ──
-  ipcMain.handle('daily:close', (_e, closedBy: number, notes: string) => {
-    const today = new Date().toISOString().split('T')[0];
+  ipcMain.handle('daily:close', (_e, closedBy: number, notes: string, targetDate?: string) => {
+    const today = targetDate || getLocalDate();
 
     // Check if already closed
     const existing = db.prepare('SELECT id FROM daily_closings WHERE date = ?').get(today);
     if (existing) {
-      return { success: false, error: 'Dita e sotme eshte mbyllur tashme' };
+      return { success: false, error: 'Kjo dite eshte mbyllur tashme' };
     }
 
-    // Complete all open orders
-    db.prepare("UPDATE orders SET status = 'completed' WHERE status = 'open' AND date(created_at) = date('now', 'localtime')").run();
+    // Complete all open orders for this date
+    db.prepare("UPDATE orders SET status = 'completed' WHERE status = 'open' AND date(created_at, 'localtime') = ?").run(today);
 
     // Calculate summary (all non-cancelled orders; open ones were just completed above)
     const summary = db.prepare(`
@@ -224,18 +235,18 @@ export function registerIpcHandlers() {
         COALESCE(SUM(CASE WHEN order_type = 'dine-in' THEN 1 ELSE 0 END), 0) as dine_in_orders,
         COALESCE(SUM(CASE WHEN order_type = 'take-away' THEN 1 ELSE 0 END), 0) as take_away_orders
       FROM orders
-      WHERE date(created_at) = date('now', 'localtime')
+      WHERE date(created_at, 'localtime') = ?
         AND status != 'cancelled'
-    `).get() as any;
+    `).get(today) as any;
 
     const revenue = db.prepare(`
       SELECT COALESCE(SUM(oi.price * oi.quantity), 0) as total_revenue,
              COALESCE(SUM(oi.quantity), 0) as total_items
       FROM order_items oi
       JOIN orders o ON oi.order_id = o.id
-      WHERE date(o.created_at) = date('now', 'localtime')
+      WHERE date(o.created_at, 'localtime') = ?
         AND o.status != 'cancelled'
-    `).get() as any;
+    `).get(today) as any;
 
     db.prepare(`
       INSERT INTO daily_closings (date, total_orders, total_revenue, total_items, dine_in_orders, take_away_orders, closed_by, notes)
@@ -255,9 +266,49 @@ export function registerIpcHandlers() {
   });
 
   ipcMain.handle('daily:is-closed-today', () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDate();
     const row = db.prepare('SELECT id FROM daily_closings WHERE date = ?').get(today);
     return !!row;
+  });
+
+  ipcMain.handle('daily:unclosed-previous', () => {
+    // Find the most recent past date that has orders but no closing record
+    const row = db.prepare(`
+      SELECT date(o.created_at, 'localtime') as date, COUNT(*) as order_count
+      FROM orders o
+      WHERE date(o.created_at, 'localtime') < date('now', 'localtime')
+        AND date(o.created_at, 'localtime') NOT IN (SELECT date FROM daily_closings)
+        AND o.status != 'cancelled'
+      GROUP BY date(o.created_at, 'localtime')
+      ORDER BY date DESC
+      LIMIT 1
+    `).get() as any;
+    return row || null;
+  });
+
+  ipcMain.handle('orders:day-summary', (_e, date: string) => {
+    const summary = db.prepare(`
+      SELECT
+        COUNT(*) as total_orders,
+        COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) as completed_orders,
+        COALESCE(SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END), 0) as open_orders,
+        COALESCE(SUM(CASE WHEN order_type = 'dine-in' THEN 1 ELSE 0 END), 0) as dine_in_orders,
+        COALESCE(SUM(CASE WHEN order_type = 'take-away' THEN 1 ELSE 0 END), 0) as take_away_orders
+      FROM orders
+      WHERE date(created_at, 'localtime') = ?
+        AND status != 'cancelled'
+    `).get(date) as any;
+
+    const revenue = db.prepare(`
+      SELECT COALESCE(SUM(oi.price * oi.quantity), 0) as total_revenue,
+             COALESCE(SUM(oi.quantity), 0) as total_items
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      WHERE date(o.created_at, 'localtime') = ?
+        AND o.status != 'cancelled'
+    `).get(date) as any;
+
+    return { ...summary, ...revenue };
   });
 
   // ── Settings ──
