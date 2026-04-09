@@ -1,6 +1,6 @@
 {
   "name": "coffee-shop-manager",
-  "version": "1.0.1",
+  "version": "1.2.0",
   "description": "Coffee Shop Manager - manage menu, rooms, tables, and orders",
   "main": "build/main/index.js",
   "scripts": {
